@@ -38,7 +38,7 @@ def blog():
 
         return render_template(
             "blog_post.html",
-            title="Build A Blog",
+            title=post_title,
             post_title=post_title,
             post_content=post_content
         )
@@ -76,7 +76,12 @@ def newpost():
             re_content = ""
             if (not title) and content:
                 re_content = content
-                error_message = "Write a title."
+                error_message = """
+                You moron. You absolute dunce. 
+                How could you possibly write an entire blog post and forget to put in a title? 
+                My geriatric great-grandfather could do that without a second thought, and he needs a nurse's assistance to go to the bathroom.
+                Write your title and submit it again, and try not to screw it up this time.
+                """
             elif title and (not content):
                 re_title = title
                 error_message = "Write some content."

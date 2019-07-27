@@ -6,10 +6,16 @@
     <form action="/newpost" method="POST">
 
         <div class="blog-post-title">
-            <input name="title" type="text" {% if re_title %} value="{{re_title}}" {% else %} placeholder="Write your title here." {% endif %}>
+            <tr>
+                <td><label for="title">Blog post title</label></td><br>
+                <td><input name="title" type="text" {% if re_title %} value="{{re_title}}" {% else %} placeholder="Write your title here." {% endif %}></td>
+            </tr>
         </div>
         <div class="blog-post-content">
-            <textarea name="content" type="textarea" rows="10" cols="40" placeholder="Write your blog post here.">{{re_content}}</textarea>
+            <tr>
+                <td><label for="content">Blog post content</label></td><br>
+                <td><textarea name="content" type="textarea" rows="10" cols="40" placeholder="Write your blog post here.">{{re_content}}</textarea></td>
+            </tr>
         </div>
         <div>
             <input type="submit" value="Submit!">
