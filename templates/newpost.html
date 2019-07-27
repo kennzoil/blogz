@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="blog-post-container">
+    <form action="/newpost" method="POST">
+
+        <div class="blog-post-title">
+            <input name="title" type="text" {% if re_title %} value="{{re_title}}" {% else %} placeholder="Write your title here." {% endif %}>
+        </div>
+        <div class="blog-post-content">
+            <textarea name="content" type="textarea" rows="10" cols="40" placeholder="Write your blog post here.">{{re_content}}</textarea>
+        </div>
+        <div>
+            <input type="submit" value="Submit!">
+        </div>
+        <div class="error_message">
+            <span style="color:red">{{error_message}}</span>
+        </div>
+    </form>
+</div>
+
+{% endblock %}

@@ -1,0 +1,44 @@
+<!doctype html>
+<html>
+    <head>
+        <title>{{title}}</title>
+        <style>
+            .blog-container {
+                margin: 10px 0 100px;
+            }
+            .blog-post-container {
+                border: 1px solid black;
+                margin: 5px 0 5px 25%;
+                padding: 5px;
+                width: 50%;
+            }
+            .blog-post-title {
+                font-size: 1.5em;
+            }
+            .blog-post-content {
+                margin-left: 20px;
+            }
+            .error_message {
+                margin: 5px 0 5px 25%;
+                padding: 5px;
+                width: 50%;
+            }
+        </style>
+    </head>
+<body>
+        <nav>
+            <a href="/blog">Home</a> |
+            <a href="/newpost">New Post</a>
+        </nav>
+
+    {% block content %}
+    {% endblock %}
+
+    <footer>
+        <span>
+            &copy;Kenny Maness 2019
+        </span>
+    </footer>
+
+</body>
+</html>
