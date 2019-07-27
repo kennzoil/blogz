@@ -2,9 +2,9 @@ from flask import Flask, request, redirect, render_template
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
-app.config['DEBUG'] = True
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://build-a-blog:123@localhost:8889/build-a-blog'
-app.config['SQLALCHEMY_ECHO'] = True
+app.config["DEBUG"] = True
+app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://build-a-blog:123@localhost:8889/build-a-blog"
+app.config["SQLALCHEMY_ECHO"] = True
 db = SQLAlchemy(app)
 
 
@@ -19,27 +19,41 @@ class BlogPost(db.Model):
         self.content = content
 
 
-
-@app.route('/')
+@app.route("/")
 def index():
-    return redirect("/blog")
 
+    return redirect(
+        "/blog"
+    )
 
 @app.route("/blog")
 def blog():
-    blog_posts = BlogPost.query.all()
-    return render_template("blog.html", title="My Blog Posts", posts=blog_posts)
 
-@app.route("/blog_post")
-def blog_post():
+    if request.args.get("id"):
 
-    blogpost_id = request.args.get(BlogPost.blogpost_id)
-    blog_post = BlogPost.query.get(blogpost_id)
+        blog_id = int(request.args.get("id"))
+        indiv_blog = BlogPost.query.get(blog_id)
+        post_title = indiv_blog.title
+        post_content = indiv_blog.content
 
-    # TODO - render tempalte
+        return render_template(
+            "blog_post.html",
+            title="Build A Blog",
+            post_title=post_title,
+            post_content=post_content
+        )
+
+    else:
+        blog_posts = BlogPost.query.all()
+
+        return render_template(
+            "blog.html",
+            title="My Blog Posts",
+            posts=blog_posts
+        )
 
 
-@app.route("/newpost", methods=['POST', 'GET'])
+@app.route("/newpost", methods=["POST", "GET"])
 def newpost():
 
     if request.method == "POST":
@@ -51,8 +65,12 @@ def newpost():
             post = BlogPost(title, content)
             db.session.add(post)
             db.session.commit()
-            # TODO - redirect to the blog post handler instead of "/blog"
-            return redirect("/blog")
+            blog_id = post.blogpost_id
+
+            return redirect(
+                "/blog?id=" + str(blog_id)
+            )
+
         else:
             re_title = ""
             re_content = ""
@@ -65,11 +83,21 @@ def newpost():
             else:
                 error_message = "Write something."
 
-            return render_template("newpost.html", title="Write a new post", error_message=error_message, re_title=re_title, re_content=re_content)
+            return render_template(
+                "newpost.html",
+                title="Write a new post",
+                error_message=error_message,
+                re_title=re_title,
+                re_content=re_content
+            )
 
 
     elif request.method == "GET":
-        return render_template("newpost.html", title="Write a new post")
 
-if __name__ == '__main__':
+        return render_template(
+            "newpost.html",
+            title="Write a new post"
+        )
+
+if __name__ == "__main__":
     app.run()
