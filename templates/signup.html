@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="blog-post-container">
+    <form method="POST" action="/">
+        <h1>Sign Up</h1><br>
+        <table>
+            <tr>
+                <td><label for="username">Username</label></td>
+                <td><input name="username" value="{{username}}"></td>
+                <td><span class="error">{{username_error}}</span></td>
+            </tr>
+            <tr>
+                <td><label for="password">Password</label></td>
+                <td><input name="password" type="password" value="{{password}}"></td>
+                <td><span class="error">{{password_error}}</span></td>
+            </tr>
+            <tr>
+                <td><label for="pass_confirm">Confirm Password</label></td>
+                <td><input name="pass_confirm" type="password"></td>
+                <td><span class="error">{{passconfirm_error}}</span></td>
+            </tr>
+            <tr>
+                <td><label for="email">Email</label></td>
+                <td><input name="email" value="{{email}}" placeholder="optional"></td>
+                <td><span class="error">{{email_error}}</span></td>
+                </tr>
+        </table>
+        <button type="submit">Sign me up!</button>
+    </form>
+</div>
+
+{% endblock %}

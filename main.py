@@ -1,9 +1,20 @@
+## TODO - add the following templates: signup.html, login.html, and index.html
+## TODO - add a singleUser.html template that will be used to display only the blogs associated with a single given author.
+## It will be used when we dynamically generate a page using a GET request with a user query parameter on the /blog route.
+# TODO - add the following route handler functions: signup, login, and index
+# TODO - have a logout function that handles a POST request to /logout and redirects the user to /blog after deleting the username from the session
+## TODO - add a User class to make all this new functionality possible
+
+
+
+
 from flask import Flask, request, redirect, render_template
 from flask_sqlalchemy import SQLAlchemy
+from functions import *
 
 app = Flask(__name__)
 app.config["DEBUG"] = True
-app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://build-a-blog:123@localhost:8889/build-a-blog"
+app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://blogz:123@localhost:8889/blogz"
 app.config["SQLALCHEMY_ECHO"] = True
 db = SQLAlchemy(app)
 
@@ -11,19 +22,74 @@ db = SQLAlchemy(app)
 class BlogPost(db.Model):
 
     blogpost_id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(120))
-    content = db.Column(db.Text)
+    title = db.Column(db.String(120), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.user_id"),
+        nullable=False)
 
-    def __init__(self, title, content):
+    def __init__(self, title, content, user_id):
         self.title = title
         self.content = content
+        self.user = user_id
 
+class User(db.Model):
+
+    user_id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(22), nullable=False)
+    password = db.Column(db.String(120), nullable=False)
+    blogs = db.relationship("BlogPost", backref="user", lazy=True)
+
+    def __init__(self, user_id, username, password, blogs):
+
+        self.user_id = user_id
+        self.username = username
+        self.password = password
+        self.blogs = blogs
+
+
+@app.route("/signup", methods=["POST"])
+def signup():
+
+    username = request.form["username"]
+    password = request.form["password"]
+    passconfirm = request.form["pass_confirm"]
+
+    errors = {
+        "username": "",
+        "password": "",
+        "pass_confirm": "",
+    }
+
+    if valid_username(username) == False:
+        errors["username"] = "Please enter a valid username, between 3 and 20 characters, with no spaces."
+    if valid_password(password) == False:
+        errors["password"] = "Don't forget your password!"
+    if passwords_match(password, passconfirm) == False:
+        errors["pass_confirm"] = "Make sure your passwords match."
+
+    if list(errors.values()) == ["", "", ""]:
+        return redirect(
+            "/newpost"
+        )
+    else:
+        return render_template(
+            "signup.html",
+            title = "Sign Up",
+            username_error = errors["username"],
+            password_error = errors["password"],
+            passconfirm_error = errors["pass_confirm"],
+            username = username
+        )
+
+@app.route("/login")
+def login():
+    return render_template("login.html")
 
 @app.route("/")
 def index():
 
     return redirect(
-        "/blog"
+        "/login"
     )
 
 @app.route("/blog")
@@ -52,7 +118,6 @@ def blog():
             posts=blog_posts
         )
 
-
 @app.route("/newpost", methods=["POST", "GET"])
 def newpost():
 
@@ -60,9 +125,10 @@ def newpost():
 
         title = request.form["title"]
         content = request.form["content"]
+        user_id = 
 
         if title and content:
-            post = BlogPost(title, content)
+            post = BlogPost(title, content, user_id)
             db.session.add(post)
             db.session.commit()
             blog_id = post.blogpost_id
@@ -77,16 +143,24 @@ def newpost():
             if (not title) and content:
                 re_content = content
                 error_message = """
-                You moron. You absolute dunce. 
-                How could you possibly write an entire blog post and forget to put in a title? 
-                My geriatric great-grandfather could do that without a second thought, and he needs a nurse's assistance to go to the bathroom.
-                Write your title and submit it again, and try not to screw it up this time.
+                You moron. You absolute dunce.\n
+                How could you possibly write an entire blog post and forget to put in a title?\n
+                My geriatric great-grandfather could do that without a second thought,\n
+                and he needs a nurse's assistance to go to the bathroom.\n
+                Write your title and submit it again,\n
+                and try not to screw it up this time.
                 """
             elif title and (not content):
                 re_title = title
-                error_message = "Write some content."
+                error_message = """
+                You wrote a title and completely skipped over the content section.\n
+                What a stupid mistake. You complete imbecile. You monstrous cretin.\n
+                You should be ashamed of yourself.\n
+                Do it again, you ignoramous.\n
+                Try not to screw up, will you?
+                """
             else:
-                error_message = "Write something."
+                error_message = "You're getting a little ahead of yourself there, buddy."
 
             return render_template(
                 "newpost.html",
@@ -96,13 +170,13 @@ def newpost():
                 re_content=re_content
             )
 
-
     elif request.method == "GET":
 
         return render_template(
             "newpost.html",
             title="Write a new post"
         )
+
 
 if __name__ == "__main__":
     app.run()
