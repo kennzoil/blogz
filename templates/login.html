@@ -1,11 +1,24 @@
-<!-- User enters a username that is stored in the database with the correct password
-        and is redirected to the /newpost page with their username being stored in a session.
+{% extends "base.html" %}
 
-User enters a username that is stored in the database with an incorrect password
-        and is redirected to the /login page with a message that their password is incorrect.
+{% block content %}
 
-User tries to login with a username that is not stored in the database
-        and is redirected to the /login page with a message that this username does not exist.
-        
-User does not have an account and clicks "Create Account"
-        and is directed to the /signup page. -->
+<div class="blog-post-container">
+    <form method="POST" action="/">
+        <h1>Log In</h1><br>
+        <table>
+            <tr>
+                <td><label for="username">Username</label></td>
+                <td><input name="username" value="{{username}}"></td>
+                <td><span class="error">{{username_error}}</span></td>
+            </tr>
+            <tr>
+                <td><label for="password">Password</label></td>
+                <td><input name="password" type="password" value="{{password}}"></td>
+                <td><span class="error">{{password_error}}</span></td>
+            </tr>
+        </table>
+        <button type="submit">Log In</button>
+    </form>
+</div>
+
+{% endblock %}

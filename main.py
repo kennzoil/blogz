@@ -24,8 +24,7 @@ class BlogPost(db.Model):
     blogpost_id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(120), nullable=False)
     content = db.Column(db.Text, nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey("user.user_id"),
-        nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.user_id"), nullable=False)
 
     def __init__(self, title, content, user_id):
         self.title = title
@@ -39,12 +38,10 @@ class User(db.Model):
     password = db.Column(db.String(120), nullable=False)
     blogs = db.relationship("BlogPost", backref="user", lazy=True)
 
-    def __init__(self, user_id, username, password, blogs):
+    def __init__(self, username, password):
 
-        self.user_id = user_id
         self.username = username
         self.password = password
-        self.blogs = blogs
 
 
 @app.route("/signup", methods=["POST"])
@@ -68,9 +65,16 @@ def signup():
         errors["pass_confirm"] = "Make sure your passwords match."
 
     if list(errors.values()) == ["", "", ""]:
-        return redirect(
-            "/newpost"
-        )
+        existing_user = User.query.filter_by(username=username).first()
+        if not existing_user:
+            new_user = User(username, password)
+            db.session.add(new_user)
+            db.session.commit()
+            session["username"] = username
+            # TODO - fix this
+            return redirect(
+                "/newpost"
+            )
     else:
         return render_template(
             "signup.html",
@@ -83,6 +87,19 @@ def signup():
 
 @app.route("/login")
 def login():
+
+    # User enters a username that is stored in the database with the correct password
+    # and is redirected to the /newpost page with their username being stored in a session.
+
+    # User enters a username that is stored in the database with an incorrect password
+    # and is redirected to the /login page with a message that their password is incorrect.
+
+    # User tries to login with a username that is not stored in the database
+    # and is redirected to the /login page with a message that this username does not exist.
+
+    # User does not have an account and clicks "Create Account"
+    # and is directed to the /signup page.
+
     return render_template("login.html")
 
 @app.route("/")
@@ -125,7 +142,8 @@ def newpost():
 
         title = request.form["title"]
         content = request.form["content"]
-        user_id = 
+        user_id = User.query.filter_by(username=session["username"]).first()
+        # TODO - fix this
 
         if title and content:
             post = BlogPost(title, content, user_id)
