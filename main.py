@@ -6,8 +6,6 @@
 ## TODO - add a User class to make all this new functionality possible
 
 
-
-
 from flask import Flask, request, redirect, render_template
 from flask_sqlalchemy import SQLAlchemy
 from functions import *
@@ -74,6 +72,12 @@ def signup():
             # TODO - fix this
             return redirect(
                 "/newpost"
+            )
+        else:
+            return render_template(
+                "signup.html",
+                title = "Sign Up",
+                username_error = "User with this username already exists."
             )
     else:
         return render_template(
