@@ -1,19 +1,13 @@
-## TODO - add the following templates: signup.html, login.html, and index.html
-## TODO - add a singleUser.html template that will be used to display only the blogs associated with a single given author.
-## It will be used when we dynamically generate a page using a GET request with a user query parameter on the /blog route.
-# TODO - add the following route handler functions: signup, login, and index
-# TODO - have a logout function that handles a POST request to /logout and redirects the user to /blog after deleting the username from the session
-## TODO - add a User class to make all this new functionality possible
-
-
-from flask import Flask, request, redirect, render_template
+from flask import Flask, request, redirect, render_template, session
 from flask_sqlalchemy import SQLAlchemy
 from functions import *
+from os import urandom
 
 app = Flask(__name__)
 app.config["DEBUG"] = True
 app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://blogz:123@localhost:8889/blogz"
 app.config["SQLALCHEMY_ECHO"] = True
+app.secret_key = urandom(16)
 db = SQLAlchemy(app)
 
 
@@ -42,76 +36,131 @@ class User(db.Model):
         self.password = password
 
 
-@app.route("/signup", methods=["POST"])
+@app.before_request
+def require_login():
+    allowed_routes = ["login", "signup", "blog", "index"]
+    if request.endpoint not in allowed_routes and "username" not in session:
+        return redirect("/login")
+
+@app.route("/signup", methods=["GET", "POST"])
 def signup():
 
-    username = request.form["username"]
-    password = request.form["password"]
-    passconfirm = request.form["pass_confirm"]
+    if request.method == "POST":
 
-    errors = {
-        "username": "",
-        "password": "",
-        "pass_confirm": "",
-    }
+        username = request.form["username"]
+        password = request.form["password"]
+        passconfirm = request.form["pass_confirm"]
 
-    if valid_username(username) == False:
-        errors["username"] = "Please enter a valid username, between 3 and 20 characters, with no spaces."
-    if valid_password(password) == False:
-        errors["password"] = "Don't forget your password!"
-    if passwords_match(password, passconfirm) == False:
-        errors["pass_confirm"] = "Make sure your passwords match."
+        errors = {
+            "username": "",
+            "password": "",
+            "pass_confirm": "",
+        }
 
-    if list(errors.values()) == ["", "", ""]:
-        existing_user = User.query.filter_by(username=username).first()
-        if not existing_user:
-            new_user = User(username, password)
-            db.session.add(new_user)
-            db.session.commit()
-            session["username"] = username
-            # TODO - fix this
-            return redirect(
-                "/newpost"
-            )
+        if valid_username(username) == False:
+            errors["username"] = "Please enter a valid username, between 3 and 20 characters, with no spaces."
+        if valid_password(password) == False:
+            errors["password"] = "Don't forget your password!"
+        if passwords_match(password, passconfirm) == False:
+            errors["pass_confirm"] = "Make sure your passwords match."
+
+        if list(errors.values()) == ["", "", ""]:
+            existing_user = User.query.filter_by(username = username).first()
+            if not existing_user:
+                new_user = User(username, password)
+                db.session.add(new_user)
+                db.session.commit()
+                session["username"] = username
+                return redirect(
+                    "/newpost"
+                )
+            else:
+                return render_template(
+                    "signup.html",
+                    title = "Sign Up",
+                    username_error = "User with this username already exists."
+                )
         else:
             return render_template(
                 "signup.html",
-                title = "Sign Up",
-                username_error = "User with this username already exists."
+                title = "Create an account",
+                username_error = errors["username"],
+                password_error = errors["password"],
+                passconfirm_error = errors["pass_confirm"],
+                username = username
             )
-    else:
+    elif request.method == "GET":
         return render_template(
             "signup.html",
-            title = "Sign Up",
-            username_error = errors["username"],
-            password_error = errors["password"],
-            passconfirm_error = errors["pass_confirm"],
-            username = username
+            title = "Create an account"
         )
 
-@app.route("/login")
+@app.route("/login", methods=["GET", "POST"])
 def login():
 
-    # User enters a username that is stored in the database with the correct password
-    # and is redirected to the /newpost page with their username being stored in a session.
+    # This block is for GET requests, when the login page is loaded normally.
+    if request.method == "GET":
+        return render_template(
+            "login.html",
+            title = "Log In"
+        )
 
-    # User enters a username that is stored in the database with an incorrect password
-    # and is redirected to the /login page with a message that their password is incorrect.
+    # This block is for POST requests, when the 'Log In' button is clicked.
+    elif request.method == "POST":
+        username = request.form["username"]
+        password = request.form["password"]
 
-    # User tries to login with a username that is not stored in the database
-    # and is redirected to the /login page with a message that this username does not exist.
+        # If either field is left blank, this happens.
+        if not (username and password):
+            username_error = ""
+            password_error = ""
+            if not username:
+                username_error = "Enter a username."
+            if not password:
+                password_error = "Enter a password."
 
-    # User does not have an account and clicks "Create Account"
-    # and is directed to the /signup page.
+            return render_template(
+                "login.html",
+                title = "Log In",
+                username = username,
+                username_error = username_error,
+                password_error = password_error
+            )
 
-    return render_template("login.html")
+        # Get the user from the database
+        user = User.query.filter_by(username = username).first()
+
+        if not user:
+            return render_template(
+                "login.html",
+                title = "Log In",
+                username_error = "Impossible. Perhaps the archives are incomplete."
+            )
+        
+        if user.password != password:
+            return render_template(
+                "login.html",
+                title = "Log In",
+                password_error = "That's the wrong password.",
+                username = username
+            )
+
+        session["username"] = username
+        return redirect(
+            "/newpost"
+        )
 
 @app.route("/")
 def index():
 
-    return redirect(
-        "/login"
-    )
+    if request.method == "GET":
+
+        users = User.query.all()
+
+        return render_template(
+            "index.html",
+            users = users
+        )
 
 @app.route("/blog")
 def blog():
@@ -131,12 +180,14 @@ def blog():
         )
 
     else:
-        blog_posts = BlogPost.query.all()
+        posts = BlogPost.query.all()
+        users = User.query.all()
 
         return render_template(
             "blog.html",
-            title="My Blog Posts",
-            posts=blog_posts
+            title = "My Blog Posts",
+            posts = posts,
+            user = users
         )
 
 @app.route("/newpost", methods=["POST", "GET"])
@@ -198,6 +249,11 @@ def newpost():
             "newpost.html",
             title="Write a new post"
         )
+
+@app.route("/logout")
+def logout():
+   del session["username"]
+   return redirect("/blog")
 
 
 if __name__ == "__main__":

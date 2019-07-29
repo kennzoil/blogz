@@ -9,7 +9,8 @@
     {% for post in posts %}
         <div class="blog-post-container">
             <div class="blog-post-title"><a href="/blog?id={{ post.blogpost_id }}">{{ post.title }}</a></div>
-            <!-- <div class="blog-post-content">{{ post.content }}</div> -->
+            <div class="blog-post-content">{{ post.content }}</div>
+            <div>Written by {{ user.username }}</a></div>
         </div>
     {% endfor %}
 
