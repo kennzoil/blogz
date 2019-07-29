@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+{% for blog_post in blog_posts %}
+
+<div class="blog-container">
+
+        <div class="blog-post-container">
+            <div class="blog-post-title">{{ blog_post.title }}</div>
+            <div class="blog-post-content">{{ blog_post.content }}</div>
+        </div>
+
+</div>
+
+{% endfor %}
+
+{% endblock %}

@@ -5,8 +5,9 @@
 <div class="blog-post-container">
     <ul>
     {% for user in users %}
-        <li>{{ user.username }}</li>
+        <li><a href="/blog?user={{ indiv_user }}">{{ user.username }}</a></li>
     {% endfor %}
+    </ul>
 </div>
 
 {% endblock %}

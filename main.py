@@ -171,23 +171,38 @@ def blog():
         indiv_blog = BlogPost.query.get(blog_id)
         post_title = indiv_blog.title
         post_content = indiv_blog.content
+        post_user = indiv_blog.user.username
+        post_user_id = indiv_blog.user.user_id
 
         return render_template(
             "blog_post.html",
             title=post_title,
             post_title=post_title,
-            post_content=post_content
+            post_content=post_content,
+            post_user=post_user,
+            post_user_id=post_user_id
+        )
+
+    elif request.args.get("user"):
+
+        user_id = int(request.args.get("user"))
+        indiv_user = User.query.get(user_id)
+        blog_posts = indiv_user.blogs
+
+        return render_template(
+            "singleUser.html",
+            title = "something",
+            blog_posts = blog_posts,
+            indiv_user = indiv_user
         )
 
     else:
         posts = BlogPost.query.all()
-        users = User.query.all()
 
         return render_template(
             "blog.html",
             title = "My Blog Posts",
-            posts = posts,
-            user = users
+            posts = posts
         )
 
 @app.route("/newpost", methods=["POST", "GET"])
